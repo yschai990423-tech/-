@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>海島帝國：碎片累計版</title>
+    
+    <!-- PWA 核心設定 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2ecc71">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3064/3064790.png">
+
     <style>
         :root {
             --timer-bg: #050505;
@@ -24,13 +32,15 @@
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             overflow: hidden;
+            /* 讓 PWA 更有 App 感 */
+            user-select: none;
         }
 
-        /* 數字輸入框優化：徹底防止遮擋 */
+        /* 數字輸入框優化 */
         .timer-display { 
             z-index: 10; display: flex; align-items: center; justify-content: center; 
             font-family: 'Courier New', monospace; 
-            font-size: clamp(30px, 9vw, 42px); /* 再縮小一點確保安全間距 */
+            font-size: clamp(30px, 9vw, 42px);
             font-weight: bold; width: 100%; 
             letter-spacing: -2px;
             padding: 0 10px;
@@ -55,7 +65,6 @@
         .page { display: none; height: 100vh; width: 100%; position: absolute; top: 0; left: 0; padding-bottom: 75px; overflow: hidden; }
         .page.active { display: flex; flex-direction: column; }
 
-        /* --- 計時器頁面 --- */
         #timerPage { align-items: center; justify-content: center; padding-top: 20px; }
         .timer-main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
         
@@ -66,10 +75,7 @@
         .progress-ring { transform: rotate(-90deg); width: 100%; height: 100%; position: absolute; }
         .progress-ring__circle { stroke: var(--accent-color); stroke-dasharray: 880; stroke-dashoffset: 0; stroke-linecap: round; transition: stroke-dashoffset 0.5s linear; }
 
-        /* 累計碎片 UI */
-        .accumulation-area {
-            width: 70%; max-width: 250px; text-align: center; margin-bottom: 20px;
-        }
+        .accumulation-area { width: 70%; max-width: 250px; text-align: center; margin-bottom: 20px; }
         .acc-label { font-size: 12px; color: #888; margin-bottom: 5px; display: block; }
         .acc-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
         .acc-bar-fill { width: 0%; height: 100%; background: var(--accent-color); transition: 0.5s; }
@@ -85,24 +91,21 @@
         .btn-reset { width: 50px; height: 50px; background: var(--btn-reset); color: #777; font-size: 11px; }
         .btn-finish { width: 80px; height: 80px; background: var(--countup-color); color: white; font-size: 16px; }
 
-        /* --- 日誌頁面 --- */
         #logPage { padding: 80px 20px 20px 20px; background: #0a0a0a; }
         .log-list { flex: 1; overflow-y: auto; margin-top: 10px; padding-bottom: 20px; }
         .log-item { background: #1a1a1a; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #333; font-size: 13px; }
         .log-item.success { border-left-color: var(--accent-color); }
-        .log-item.acc-success { border-left-color: #f1c40f; } /* 碎片獎勵特殊顏色 */
+        .log-item.acc-success { border-left-color: #f1c40f; }
         .log-item.fail { border-left-color: var(--fail-color); }
         .log-info h4 { margin: 0; font-size: 14px; }
         .log-info span { font-size: 11px; color: #777; }
 
-        /* --- 領土頁面 --- */
         #empirePage { background: radial-gradient(circle at center, #006994 0%, #003d5a 100%); }
         .map-wrapper { flex: 1; overflow: auto; display: flex; justify-content: center; align-items: center; }
         .map-container { position: relative; width: 2000px; height: 2000px; }
         .hex-grid { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .hexagon { position: absolute; width: 55px; height: 64px; background: linear-gradient(135deg, #2ecc71, #1e4d2b); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 
-        /* 底部導覽 */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: rgba(15, 15, 15, 0.98); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
         .nav-tab { display: flex; flex-direction: column; align-items: center; color: #555; font-size: 10px; font-weight: 500; cursor: pointer; }
         .nav-tab.active { color: var(--accent-color); }
@@ -123,7 +126,7 @@
         </div>
     </div>
 
-    <!-- 頁面 1：計時器 -->
+    <!-- 頁面切換內容保持不變... -->
     <div id="timerPage" class="page active">
         <div class="timer-main">
             <div class="timer-ring-container">
@@ -139,16 +142,11 @@
                     <input type="number" id="ss" value="00" onchange="checkInput()">
                 </div>
             </div>
-
-            <!-- 累計碎片顯示 -->
             <div class="accumulation-area">
                 <span class="acc-label">🧩 碎片累計 (5-14m 可獲取): <span id="accText">0/15</span> m</span>
-                <div class="acc-bar-bg">
-                    <div id="accBar" class="acc-bar-fill"></div>
-                </div>
+                <div class="acc-bar-bg"><div id="accBar" class="acc-bar-fill"></div></div>
             </div>
         </div>
-
         <div class="mobile-controls">
             <div id="presetContainer" class="preset-row">
                 <button class="btn-preset" onclick="setPreset(10)">10m</button>
@@ -163,7 +161,6 @@
         </div>
     </div>
 
-    <!-- 頁面 2：日誌 -->
     <div id="logPage" class="page">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3 style="margin:0;">專注日誌</h3>
@@ -172,7 +169,6 @@
         <div class="log-list" id="logList"></div>
     </div>
 
-    <!-- 頁面 3：領土 -->
     <div id="empirePage" class="page">
         <div style="position:absolute; top:75px; left:20px; z-index:100; background:rgba(0,0,0,0.5); padding:8px 12px; border-radius:12px; font-size:13px; backdrop-filter:blur(10px);">
             🏝️ 領土：<span id="landLabel" style="color:var(--accent-color); font-weight:bold;">0</span>
@@ -183,7 +179,6 @@
         </div>
     </div>
 
-    <!-- 底部導覽 -->
     <div class="bottom-nav">
         <div class="nav-tab active" onclick="switchPage('timerPage', this)">
             <div class="nav-icon">⏱️</div><div>專注</div>
@@ -205,6 +200,7 @@
     </div>
 
     <script>
+        // 你的原始邏輯代碼...
         let timer = null;
         let total = 1800;
         let initial = 1800;
@@ -212,7 +208,6 @@
         let mode = 'countdown';
         let startTimeFormatted = "";
 
-        // 儲存鍵值
         const STORAGE_EMPIRE = 'islandEmpireData_Combined';
         const STORAGE_LOGS = 'focusHistoryLogs_Combined';
         const STORAGE_ACC = 'accumulationSeconds_V1';
@@ -226,6 +221,12 @@
         const circumference = 140 * 2 * Math.PI;
         circle.style.strokeDasharray = `${circumference} ${circumference}`;
 
+        // 註冊 Service Worker (PWA 關鍵)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
+        }
+
+        // 防止誤觸離開
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && running) {
                 if (confirm("偵測到您離開了頁面，要放棄本次專注嗎？")) handleReset(true);
@@ -257,12 +258,9 @@
             document.getElementById('hh').value = h.toString().padStart(2, '0');
             document.getElementById('mm').value = m.toString().padStart(2, '0');
             document.getElementById('ss').value = s.toString().padStart(2, '0');
-
             const percent = mode === 'countdown' ? (initial > 0 ? (total / initial) * 100 : 0) : ((total % 60) / 60 * 100);
             circle.style.strokeDashoffset = circumference - (percent / 100 * circumference);
             circle.style.stroke = (mode === 'countup') ? 'var(--countup-color)' : 'var(--accent-color)';
-            
-            // 更新累計 UI
             const accMins = (accSeconds / 60).toFixed(1);
             document.getElementById('accText').innerText = `${accMins}/15`;
             document.getElementById('accBar').style.width = `${Math.min((accSeconds / 900) * 100, 100)}%`;
@@ -276,7 +274,7 @@
             document.getElementById('presetContainer').style.opacity = (mode === 'countdown' ? '1' : '0');
             document.getElementById('finishBtn').style.display = (mode === 'countup' ? 'block' : 'none');
             document.getElementById('resetBtn').style.display = (mode === 'countdown' ? 'block' : 'none');
-            total = (mode === 'countup') ? 0 : 600; // 預設 10 分鐘
+            total = (mode === 'countup') ? 0 : 600;
             initial = total;
             updateUI();
         }
@@ -284,66 +282,32 @@
         function toggleStart() {
             const btn = document.getElementById('startBtn');
             if (running) {
-                clearInterval(timer);
-                running = false;
-                btn.innerText = '繼續';
-                btn.className = 'btn-circle btn-pause';
+                clearInterval(timer); running = false;
+                btn.innerText = '繼續'; btn.className = 'btn-circle btn-pause';
             } else {
                 if (mode === 'countdown' && total <= 0) return;
                 if (!startTimeFormatted) startTimeFormatted = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 running = true;
-                btn.innerText = '暫停';
-                btn.className = 'btn-circle btn-pause';
+                btn.innerText = '暫停'; btn.className = 'btn-circle btn-pause';
                 timer = setInterval(() => {
-                    if (mode === 'countdown') {
-                        total--;
-                        if (total <= 0) finishFocus();
-                    } else { total++; }
+                    if (mode === 'countdown') { total--; if (total <= 0) finishFocus(); } else { total++; }
                     updateUI();
                 }, 1000);
             }
         }
 
-        function finishFocus() {
-            clearInterval(timer);
-            const timeSpent = initial;
-            processReward(timeSpent);
-        }
-
-        function finishCountUp() {
-            if (total < 10) return alert("專注時間太短囉！");
-            clearInterval(timer);
-            processReward(total);
-        }
+        function finishFocus() { clearInterval(timer); processReward(initial); }
+        function finishCountUp() { if (total < 10) return alert("專注時間太短囉！"); clearInterval(timer); processReward(total); }
 
         function processReward(seconds) {
             let status = "成功";
-            
-            // 邏輯：5-14 分鐘 (300-840秒) 累計
             if (seconds >= 300 && seconds <= 840) {
-                accSeconds += seconds;
-                status = `成功 (累計 +${Math.floor(seconds/60)}分)`;
-                
-                if (accSeconds >= 900) { // 滿 15 分鐘
-                    showModal();
-                    accSeconds = 0; // 重置
-                    status = "成功 (累計滿 15m 獲取領土)";
-                }
+                accSeconds += seconds; status = `成功 (累計 +${Math.floor(seconds/60)}分)`;
+                if (accSeconds >= 900) { showModal(); accSeconds = 0; status = "成功 (累計滿 15m 獲取領土)"; }
                 localStorage.setItem(STORAGE_ACC, accSeconds);
-            } 
-            // 邏輯：直接滿 30 分鐘獎勵
-            else if (seconds >= 1800) {
-                showModal();
-                status = "成功 (滿 30m 獲取領土)";
-            }
-
+            } else if (seconds >= 1800) { showModal(); status = "成功 (滿 30m 獲取領土)"; }
             addLog(mode === 'countdown' ? "倒計時" : "正計時", formatTime(seconds), status);
-            running = false;
-            resetUI();
-            playAlarm();
-            if (seconds < 300 || (seconds > 840 && seconds < 1800)) {
-                alert(`專注結束！時長：${formatTime(seconds)}。未達累計或獎勵標準。`);
-            }
+            running = false; resetUI(); playAlarm();
         }
 
         function handleReset(isCheat = false) {
@@ -351,49 +315,33 @@
                 const status = isCheat ? "失敗 (離開)" : "中途取消";
                 addLog(mode === 'countdown' ? "倒計時" : "正計時", formatTime(mode === 'countdown' ? initial - total : total), status);
             }
-            clearInterval(timer);
-            running = false;
+            clearInterval(timer); running = false;
             total = mode === 'countdown' ? initial : 0;
             resetUI();
         }
 
-        function resetUI() {
-            startTimeFormatted = "";
-            const btn = document.getElementById('startBtn');
-            btn.innerText = '開始';
-            btn.className = 'btn-circle btn-start';
-            updateUI();
-        }
-
+        function resetUI() { startTimeFormatted = ""; const btn = document.getElementById('startBtn'); btn.innerText = '開始'; btn.className = 'btn-circle btn-start'; updateUI(); }
         function addLog(type, duration, status) {
             const log = { type, time: startTimeFormatted, date: new Date().toLocaleDateString(), duration, status };
-            myLogs.unshift(log);
-            localStorage.setItem(STORAGE_LOGS, JSON.stringify(myLogs));
+            myLogs.unshift(log); localStorage.setItem(STORAGE_LOGS, JSON.stringify(myLogs));
         }
-
         function renderLogs() {
             const list = document.getElementById('logList');
             list.innerHTML = myLogs.length ? '' : '<p style="color:#555; text-align:center;">尚無紀錄</p>';
             myLogs.forEach(log => {
                 const item = document.createElement('div');
                 const isSuccess = log.status.includes("成功");
-                const isAcc = log.status.includes("累計");
-                item.className = `log-item ${isSuccess ? (isAcc ? "acc-success" : "success") : "fail"}`;
+                item.className = `log-item ${isSuccess ? (log.status.includes("累計") ? "acc-success" : "success") : "fail"}`;
                 item.innerHTML = `<div class="log-info"><h4>${log.type} <small>(${log.status})</small></h4><span>${log.date} ${log.time} · 時長: ${log.duration}</span></div>`;
                 list.appendChild(item);
             });
         }
-
         function showModal() {
-            const grid = document.getElementById('emojiChoices');
-            grid.innerHTML = '';
+            const grid = document.getElementById('emojiChoices'); grid.innerHTML = '';
             emojis.forEach(emoji => {
-                const div = document.createElement('div');
-                div.className = 'emoji-item';
-                div.innerText = emoji;
+                const div = document.createElement('div'); div.className = 'emoji-item'; div.innerText = emoji;
                 div.onclick = () => {
-                    myLand.push(emoji);
-                    localStorage.setItem(STORAGE_EMPIRE, JSON.stringify(myLand));
+                    myLand.push(emoji); localStorage.setItem(STORAGE_EMPIRE, JSON.stringify(myLand));
                     document.getElementById('choiceModal').style.display = 'none';
                     switchPage('empirePage', document.querySelectorAll('.nav-tab')[2]);
                 };
@@ -401,42 +349,29 @@
             });
             document.getElementById('choiceModal').style.display = 'flex';
         }
-
         function setPreset(min) { if (!running) { initial = min * 60; total = initial; updateUI(); } }
         function formatTime(s) { const mins = Math.floor(s / 60); const secs = s % 60; return `${mins}分${secs}秒`; }
-
         function renderMap() {
-            const grid = document.getElementById('hexGrid');
-            grid.innerHTML = '';
+            const grid = document.getElementById('hexGrid'); grid.innerHTML = '';
             myLand.forEach((emoji, i) => {
-                const { q, r } = getHex(i);
-                const el = document.createElement('div');
-                el.className = 'hexagon';
-                el.innerText = emoji;
-                const size = 60;
+                const { q, r } = getHex(i); const el = document.createElement('div');
+                el.className = 'hexagon'; el.innerText = emoji; const size = 60;
                 el.style.left = `${size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r)}px`;
-                el.style.top = `${size * (3/2 * r)}px`;
-                grid.appendChild(el);
+                el.style.top = `${size * (3/2 * r)}px`; grid.appendChild(el);
             });
             document.getElementById('landLabel').innerText = myLand.length;
         }
-
         function getHex(n) {
             if (n === 0) return { q: 0, r: 0 };
             let layer = Math.ceil((Math.sqrt(12 * n + 9) - 3) / 6);
             let sideIdx = n - (3 * layer * (layer - 1) + 1);
-            let side = Math.floor(sideIdx / layer);
-            let pos = sideIdx % layer;
+            let side = Math.floor(sideIdx / layer); let pos = sideIdx % layer;
             let q, r;
-            if (side === 0) { q = layer - pos; r = pos; }
-            else if (side === 1) { q = -pos; r = layer; }
-            else if (side === 2) { q = -layer; r = layer - pos; }
-            else if (side === 3) { q = -layer + pos; r = -pos; }
-            else if (side === 4) { q = pos; r = -layer; }
-            else { q = layer; r = -layer + pos; }
+            if (side === 0) { q = layer - pos; r = pos; } else if (side === 1) { q = -pos; r = layer; }
+            else if (side === 2) { q = -layer; r = layer - pos; } else if (side === 3) { q = -layer + pos; r = -pos; }
+            else if (side === 4) { q = pos; r = -layer; } else { q = layer; r = -layer + pos; }
             return { q, r };
         }
-
         function centerMap() { const w = document.getElementById('mapWrapper'); w.scrollLeft = (2000 - w.clientWidth) / 2; w.scrollTop = (2000 - w.clientHeight) / 2; }
         function playAlarm() { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const beep = (t) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value = 880; g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.01, t + 0.4); o.start(t); o.stop(t + 0.4); }; [0, 0.5, 1].forEach(t => beep(ctx.currentTime + t)); }
         function clearEmpire() { if(confirm("確定重置領土？")) { myLand = []; localStorage.setItem(STORAGE_EMPIRE, JSON.stringify(myLand)); renderMap(); } }
