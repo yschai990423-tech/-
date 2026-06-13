@@ -1,14 +1,15 @@
 {
   "name": "海島帝國：碎片累計版",
   "short_name": "海島帝國",
+  "description": "專注與領土建設的計時器",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#2ecc71",
   "icons": [
     {
-      "src": "icon.png",
-      "sizes": "192x192",
+      "src": "https://cdn-icons-png.flaticon.com/512/3064/3064790.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
